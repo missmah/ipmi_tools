@@ -100,9 +100,10 @@ sub UpdateFanSpeed
   my $min_fan_speed = 30000;
   my $max_fan_speed = 0;
 
-  foreach my $fan (1..$number_of_fans)
+  foreach my $value (@vals)
   {
-    foreach my $value (@vals)
+  
+    foreach my $fan (1..$number_of_fans)
     {
       if( $value =~ /^(FAN$fan)\s.*\s(\d+)\s.*RPM.*/gi )
       {
@@ -111,21 +112,12 @@ sub UpdateFanSpeed
         #print "FanSpeed: $2 RPM\n";
         print "$1 ....: $2 RPM\n";
         my  $fan_speed = $2;
-        if( $fan_speed < $min_fan_speed )
-        {
-          $min_fan_speed = $fan_speed;
-        }
-        if( $fan_speed > $max_fan_speed )
-        {
-          $max_fan_speed = $fan_speed;
-        }
+        $min_fan_speed = min( $fan_speed, $min_fan_speed );
+        $max_fan_speed = max( $fan_speed, $max_fan_speed );
       }
-    }
-  }
-
-  foreach my $cpu (1..$number_of_cpus)
-  {
-    foreach my $value (@vals)
+    } # foreach my $fan (1..$number_of_fans)
+     
+    foreach my $cpu (1..$number_of_cpus)
     {
       if( $value =~ /^(CPU$cpu\sTemp).*\s(\d+)\s.*degrees\sC.*/gi )
       {
@@ -133,18 +125,12 @@ sub UpdateFanSpeed
         #print "Matched: $1\n";
         #print "Temp   : $2 degrees C\n";
         print "$1: $2 degrees C\n";
-        my  $cpu_temp = $2;
-        if( $cpu_temp > $current_cpu_temp )
-        {
-          $current_cpu_temp = $cpu_temp;
-        }
+        my      $cpu_temp = $2;
+        $current_cpu_temp = max( $cpu_temp, $current_cpu_temp );
       }
-    }
-  }
+    } # foreach my $cpu (1..$number_of_cpus)
 
-  foreach my $gpu (1..$number_of_gpus)
-  {
-    foreach my $value (@vals)
+    foreach my $gpu (1..$number_of_gpus)
     {
       if( $value =~ /^(GPU$gpu\sTemp).*\s(\d+)\s.*degrees\sC.*/gi )
       {
@@ -152,14 +138,12 @@ sub UpdateFanSpeed
         #print "Matched: $1\n";
         #print "Temp   : $2 degrees C\n";
         print "$1: $2 degrees C\n";
-        my  $gpu_temp = $2;
-        if( $gpu_temp > $current_gpu_temp )
-        {
-          $current_gpu_temp = $gpu_temp;
-        }
+        my      $gpu_temp = $2;
+        $current_gpu_temp = max( $gpu_temp, $current_gpu_temp );
       }
-    }
-  }
+    } # foreach my $gpu (1..$number_of_gpus)
+    
+  } # foreach my $value (@vals)
 
   $g_current_cpu_temp = $current_cpu_temp;
   $g_current_gpu_temp = $current_gpu_temp;
@@ -169,7 +153,7 @@ sub UpdateFanSpeed
   print "Current Minimum Fan Speed: $min_fan_speed RPM\n";
   print "Current Maximum Fan Speed: $max_fan_speed RPM\n";
 
-  my $desired_fan_speed = 0x8;
+  my $desired_fan_speed = 0x0;
  
   my @cpu_temps = keys %cpu_temp_to_fan_speed;
   for my $cpu_temp (@cpu_temps)
@@ -193,6 +177,12 @@ sub UpdateFanSpeed
       $desired_fan_speed = max( $gpu_temp_to_fan_speed{ $gpu_temp }, $desired_fan_speed );
       #print "The fan speed setting for GPU Temp $gpu_temp *C is $gpu_temp_to_fan_speed{$gpu_temp} % duty cycle\n";
     }
+  }
+  
+  if( $desired_fan_speed == 0x0 )
+  {
+    print "\n***** ERROR: Failed to determine a desired fan speed. Forcing fans to 100% duty cycle as a safety fallback measure. *****\n";
+    $desired_fan_speed = 0x64;
   }
 
   print "Current Fan Duty Cycle: $g_current_fan_duty_cycle%\n";
