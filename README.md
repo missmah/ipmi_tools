@@ -7,6 +7,6 @@ NOTE: Any scripts found here are without any warranty whatsoever. ***USE THEM AT
 
 `ipmi_fancontrol.pl` - A script to remotely control fan speeds via IPMI in response to CPU and GPU temperatures.
 
-![ipmi_fancontrol.pl running](https://user-images.githubusercontent.com/10825214/39403365-5a0f9b0a-4b48-11e8-979e-8b06d22e9743.png?raw=true "ipmi_fancontrol.pl running")
+![ipmi_fancontrol.pl running](https://user-images.githubusercontent.com/10825214/39403418-b581476c-4b49-11e8-95e6-d2a74fde644a.png?raw=true "ipmi_fancontrol.pl running")
 
 
