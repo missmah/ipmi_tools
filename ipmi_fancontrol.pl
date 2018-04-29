@@ -3,8 +3,14 @@ use strict;
 use warnings;
 use List::Util qw[min max];
 
-# This script works on SuperMicro X10 motherboards (probably also X9/X11)
-# This script controls fan speeds via IPMI in response to CPU and GPU Temperatures
+# This script controls SuperMicro server fan speeds via IPMI in response to CPU and GPU Temperatures.
+# This script is tested on the SuperMicro X10 4027GR-TRT Server. It may work on other X9/X10/X11 motherboards.
+#
+# NOTE: The script puts your server into "Full Fan Speed Mode", and then modifies what "Full Speed" means,
+#       You have to manually use IPMI to set it to e.g. "Optimal" when you're not using the script.
+#
+# NOTE: You use this script at your own risk, and no warranty is provided. Do not use in produciton environments.
+#
 # Author: Layla Mah <layla@insightfulvr.com>
 
 # System Configuration
@@ -75,6 +81,7 @@ sub SetFanSpeed
     $g_last_set_gpu_temp = $g_current_gpu_temp;
     $g_current_fan_duty_cycle = $fan_speed;
 
+    # Here, we assume 4 fan banks, as the 4027GR-TRT has. TODO: Add support for N fan banks.
     `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x00 $fan_speed`;
     `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x01 $fan_speed`;
     `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x02 $fan_speed`;
