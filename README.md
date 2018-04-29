@@ -4,3 +4,5 @@ Simple Scripts for remotely managing SuperMicro X10 Servers via IPMI
 NOTE: Any scripts found here are without any warranty whatsoever. ***USE THEM AT YOUR OWN RISK!***
 
 *They're experimental, and certainly not intended for production/mission critical environments.*
+
+`ipmi_fancontrol.pl` - A script to remotely control fan speeds via IPMI in response to CPU and GPU temperatures.
