@@ -14,11 +14,12 @@ use List::Util qw[min max];
 # Author: Layla Mah <layla@insightfulvr.com>
 
 # System Configuration
-my $number_of_cpus   = 2; # Number of CPUs to search for
-my $number_of_gpus   = 4; # Number of GPUs to search for
-my $number_of_fans   = 8; # Number of FANs to search for
-my $min_temp_change  = 5; # *C minimum change to actually cause a fan speed update
-my $seconds_to_sleep = 5; # Number of seconds to sleep between update loops
+my $number_of_cpus      = 2; # Number of CPUs to search for
+my $number_of_gpus      = 4; # Number of GPUs to search for
+my $number_of_fans      = 8; # Number of FANs to search for
+my $number_of_fanbanks  = 4; # Number of BANKs of FANs to update
+my $min_temp_change     = 5; # *C minimum change to actually cause a fan speed update
+my $seconds_to_sleep    = 5; # Number of seconds to sleep between update loops
 
 # IPMI Configuration
 my $ipmi_username       = "username_goes_here";
@@ -60,6 +61,17 @@ my $g_current_cpu_temp = 0;
 my $g_last_set_cpu_temp = 0;
 my $g_last_set_gpu_temp = 0;
 
+sub Internal_DoSetFanSpeed
+{
+  my ( $fan_speed ) = @_;
+
+  foreach my $fanbank (0..$number_of_fanbanks)
+  {
+    my $hex_fanbank = sprintf( "0x%x", $fanbank );
+    `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 $hex_fanbank $fan_speed`;
+  }
+}
+
 sub SetFanSpeed
 {
   my ( $fan_speed ) = @_;
@@ -77,15 +89,12 @@ sub SetFanSpeed
     print "Current GPU Temperature is $g_current_gpu_temp *C.\n";
     print "Setting Fan Speed on all fan banks to $fan_speed\n";
     print "*************************************************************\n";
+    
     $g_last_set_cpu_temp = $g_current_cpu_temp;
     $g_last_set_gpu_temp = $g_current_gpu_temp;
     $g_current_fan_duty_cycle = $fan_speed;
 
-    # Here, we assume 4 fan banks, as the 4027GR-TRT has. TODO: Add support for N fan banks.
-    `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x00 $fan_speed`;
-    `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x01 $fan_speed`;
-    `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x02 $fan_speed`;
-    `ipmitool -I $ipmi_connectmode -U $ipmi_username -P $ipmi_password -H $ipmi_ipaddress raw 0x30 0x70 0x66 0x01 0x03 $fan_speed`;
+    Internal_DoSetFanSpeed( $fan_speed );
   }
 }
 
